@@ -224,7 +224,7 @@ app.post("/getvoice", async (req, res) => {
 app.post("/login", (req, res) => {
     console.log(req.body)
     if (req.body.password == "314159") {
-        res.sendFile(path.join(__dirname, "tmp", "Main.html"));
+        res.sendFile(path.join(__dirname, "Main.html"));
     }
     else {
         res.send("<h1>Please Enter Valid Password</h1>")
