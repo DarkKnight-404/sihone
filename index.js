@@ -21,6 +21,16 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://pshychicexcusealpha_db_user:wl1NBOBNGFtUd3Ce@cluster0.bxw9ggf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const clientM = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
+});
 
 
 
@@ -173,7 +183,7 @@ app.get("/getvoice", async (req, res) => {
         }
         // inner 2nd try catch
 
-
+        
     }
     finally {
         // Ensures that the client will close when you finish/error
