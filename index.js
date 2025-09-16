@@ -77,7 +77,7 @@ app.get("/makecall", (req, res) => {
         from: "+18156230647",
     }).then(call => {
         res.send("{'status':'success'}")
-    }).catch(() => { res.send("{'status':'fail'}") });
+    }).catch((err) => { res.send(`{'status':'fail', err: ${err}}`) });
 })
 
 
