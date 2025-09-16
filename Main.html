@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location & Image Upload</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .map-section,
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .coordinates {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .coordinates p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .coordinates span {
+            font-weight: 600;
+            color: #2980b9;
+        }
+
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            background: #f0f7ff;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #e8f4ff;
+        }
+
+        .upload-icon {
+            font-size: 60px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .url-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .url-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .generated-url {
+            word-break: break-all;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            margin-bottom: 15px;
+            color: #2980b9;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #27ae60;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .location-search {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        .submit-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .submit-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:hover {
+            background: #8e44ad;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .final-loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .final-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 10px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Location Picker & Image Upload</h1>
+            <p class="subtitle">Select coordinates on the map and upload images to get a public URL</p>
+        </header>
+
+        <div class="main-content">
+            <div class="map-section">
+                <h2 class="section-title">Select Location</h2>
+
+                <div class="location-search">
+                    <input type="text" id="locationSearch" class="search-input" placeholder="Search for a location...">
+                    <button id="searchBtn" class="search-btn">
+                        <i class="fas fa-search"></i> Search Location
+                    </button>
+                </div>
+
+                <div id="map"></div>
+                <div class="coordinates">
+                    <p>Latitude: <span id="latitude">40.7128</span></p>
+                    <p>Longitude: <span id="longitude">-74.0060</span></p>
+                    <p class="instructions">Click on the map to select a location. The coordinates will update
+                        automatically.</p>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <h2 class="section-title">Upload Image</h2>
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Upload an image to generate a public URL</p>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*">
+                    <label for="fileInput" class="upload-btn">
+                        <i class="fas fa-upload"></i> Choose Image
+                    </label>
+                </div>
+
+                <div class="preview-container">
+                    <img id="imagePreview" class="image-preview" alt="Image preview">
+                </div>
+
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>Uploading your image...</p>
+                </div>
+
+                <div class="url-result" id="urlResult">
+                    <h3 class="url-title">Your Image URL</h3>
+                    <div class="generated-url" id="generatedUrl">https://example.com/images/uploaded-image.jpg</div>
+                    <button class="copy-btn" id="copyUrlBtn">
+                        <i class="fas fa-copy"></i> Copy URL
+                    </button>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <button id="finalSubmit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Data
+                </button>
+            </div>
+        </div>
+
+        <div class="final-loader" id="finalLoader">
+            <div class="spinner"></div>
+            <p>Processing your data...</p>
+        </div>
+
+        <div class="final-message" id="finalMessage">
+            <h3><i class="fas fa-check-circle"></i> Success!</h3>
+            <p>This is your data:</p>
+            <p>soil data: <span id="final_soil_data">40.7128, -74.0060</span></p>
+            <p>is healthy: <span id="is_healthy">40.7128, -74.0060</span></p>
+            <p>crop condition: <span id="finalLocation">40.7128, -74.0060</span></p>
+            <p>crop name: <span id="final_identification">40.7128, -74.0060</span></p>
+            <p>ai feedback: <span id="ai_feedback">40.7128, -74.0060</span></p>
+            <p>Image URL: <span id="finalImageUrl">Not provided</span></p>
+        </div>
+
+        <footer>
+            <p>This is a demonstration interface. In a real application, images would be uploaded to a cloud storage
+                service.</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://js.bytescale.com/sdk/v3"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([40.7128, -74.0060], 13);
+
+        let resStatus = 0;
+
+        let imgPublicUrl = "";
+
+
+        let cropName = ""
+        let cropCondition = ""
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add a marker
+        let marker = L.marker([40.7128, -74.0060]).addTo(map);
+
+        // Update coordinates when clicking on the map
+        map.on('click', function (e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            // Update marker position
+            marker.setLatLng([lat, lng]);
+
+            // Update displayed coordinates
+            document.getElementById('latitude').textContent = lat.toFixed(6);
+            document.getElementById('longitude').textContent = lng.toFixed(6);
+        });
+
+        // Handle location search
+        document.getElementById('searchBtn').addEventListener('click', function () {
+            const locationQuery = document.getElementById('locationSearch').value;
+            if (!locationQuery) {
+                alert('Please enter a location to search for');
+                return;
+            }
+
+            // Use OpenStreetMap's Nominatim service for geocoding
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+
+                        // Update map view
+                        map.setView([lat, lon], 13);
+
+                        // Update marker position
+                        marker.setLatLng([lat, lon]);
+
+                        // Update displayed coordinates
+                        document.getElementById('latitude').textContent = lat.toFixed(6);
+                        document.getElementById('longitude').textContent = lon.toFixed(6);
+                    } else {
+                        alert('Location not found. Please try a different search term.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error searching for location. Please try again.');
+                });
+        });
+
+        // Handle file upload
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check if file is an image
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file (JPEG, PNG, etc.)');
+                return;
+            }
+
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+
+                // Simulate upload process
+                simulateImageUpload(file);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Simulate image upload and URL generation
+        function simulateImageUpload(file) {
+            // Show loading indicator
+            document.getElementById('loadingIndicator').style.display = 'flex';
+            document.getElementById('urlResult').style.display = 'none';
+
+            // Simulate network delay
+            setTimeout(async () => {
+                // Generate a mock URL (in a real app, this would come from your server)
+                const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+                const randomId = Math.random().toString(36).substring(2, 9);
+                let mockUrl = `https://storage.example.com/images/${fileName}-${randomId}.jpg`;
+
+                // Use Bytescale for actual upload
+                const uploadManager = new Bytescale.UploadManager({
+                    apiKey: "public_G22nhw55wuWdUWe6HF5cNqFaP9Ef"
+                });
+
+                try {
+                    const { fileUrl, filePath } = await uploadManager.upload({ data: file });
+                    mockUrl = fileUrl;
+                    imgPublicUrl = fileUrl; // Store the public URL for later use
+                } catch (e) {
+                    console.error('Upload error:', e.message);
+                    // Keep the mock URL as fallback   
+                }
+
+                // Display the URL
+                document.getElementById('generatedUrl').textContent = mockUrl;
+                document.getElementById('urlResult').style.display = 'block';
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 100);
+        }
+
+        // Copy URL to clipboard
+        document.getElementById('copyUrlBtn').addEventListener('click', function () {
+            const urlText = document.getElementById('generatedUrl').textContent;
+
+            // Use the Clipboard API if available
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(urlText).then(() => {
+                    // Change button text temporarily
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            } else {
+                // Fallback method for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = urlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                // Change button text temporarily
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            }
+        });
+
+        // Handle final submission
+        document.getElementById('finalSubmit').addEventListener('click', function () {
+            // Show the loader
+            document.getElementById('finalLoader').style.display = 'block';
+            document.getElementById('finalMessage').style.display = 'none';
+
+            // Get the data to display
+            const lat = document.getElementById('latitude').textContent;
+            const lng = document.getElementById('longitude').textContent;
+            const imageUrl = document.getElementById('generatedUrl').textContent;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://plant.id/api/v3/health_assessment", true);
+            xhr.setRequestHeader("Api-Key", "HouHTGANLbLGLrxQLsEtIGRcNmXCVd03tWmtw5xWRqTNWg0Eee");
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    // const responseBox = document.getElementById("responseBox");
+                    // if (xhr.status === 200) {
+                    //     responseBox.textContent = JSON.stringify(JSON.parse(xhr.responseText), null, 2);
+                    // } else {
+                    //     responseBox.textContent = "Error " + xhr.status + ":\n" + xhr.responseText;
+                    // }
+
+
+
+
+
+                    // Update the message with the actual data
+                    let xhrResponse = JSON.parse(xhr.responseText);
+                    // document.getElementById('finalLocation').textContent = `${lat}, ${lng}, ${JSON.stringify(xhr.responseText)}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    console.log(JSON.parse(xhr.responseText));
+                    console.log(JSON.parse(xhr.responseText)['result']);
+                    console.log(JSON.parse(xhr.responseText)['result']["disease"]);
+                    try {
+                        cropCondition = JSON.parse(xhr.responseText)['result']["disease"]["suggestions"][0]["name"];
+                    } catch (error) {
+
+                    }
+                    document.getElementById('finalLocation').innerHTML = `
+                ${JSON.parse(xhr.responseText)['result']["disease"]["suggestions"][0]["name"]}
+                    `;
+                    document.getElementById('finalImageUrl').textContent = imageUrl || 'Not provided';
+                    document.getElementById('finalImageUrl').textContent = imageUrl || 'Not provided';
+
+
+
+                    document.getElementById('is_healthy').textContent = JSON.parse(xhr.responseText)['result']["is_healthy"]['binary'] ? "Healthy" : "Unhealthy";
+
+                    // Scroll to the message
+                    document.getElementById('finalMessage').scrollIntoView({ behavior: 'smooth' });
+
+
+                    resStatus++;
+
+                    if (cropCondition != "" && cropName != "") {
+                        getAi();
+                    }
+
+
+
+                }
+            };
+
+            const data = JSON.stringify({
+                images: [imgPublicUrl],
+                latitude: 49.207,
+                longitude: 16.608,
+                similar_images: true
+            });
+
+            xhr.send(data);
+
+
+
+
+
+
+
+
+            const xhr2 = new XMLHttpRequest();
+            xhr2.open("POST", "https://plant.id/api/v3/identification", true);
+            xhr2.setRequestHeader("Api-Key", "HouHTGANLbLGLrxQLsEtIGRcNmXCVd03tWmtw5xWRqTNWg0Eee");
+            xhr2.setRequestHeader("Content-Type", "application/json");
+
+            xhr2.onreadystatechange = function () {
+                if (xhr2.readyState === 4) {
+                    // const responseBox = document.getElementById("responseBox");
+                    // if (xhr.status === 200) {
+                    //     responseBox.textContent = JSON.stringify(JSON.parse(xhr.responseText), null, 2);
+                    // } else {
+                    //     responseBox.textContent = "Error " + xhr.status + ":\n" + xhr.responseText;
+                    // }
+
+
+
+                    // // Hide loader and show message
+                    // document.getElementById('finalLoader').style.display = 'none';
+                    // document.getElementById('finalMessage').style.display = 'block';
+
+                    // Update the message with the actual data
+                    let xhrResponse = JSON.parse(xhr2.responseText);
+                    // document.getElementById('finalLocation').textContent = `${lat}, ${lng}, ${JSON.stringify(xhr.responseText)}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    // Build HTML content
+                    const html = `
+                ${JSON.stringify(xhrResponse)}
+    `;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    cropName = JSON.parse(xhr2.responseText)['result']["classification"]["suggestions"][0]["name"]
+                    document.getElementById('final_identification').innerHTML = `
+                ${JSON.parse(xhr2.responseText)['result']["classification"]["suggestions"][0]["name"]}
+                    `
+                    document.getElementById('finalImageUrl').textContent = imageUrl || 'Not provided';
+
+                    // Scroll to the message
+                    document.getElementById('finalMessage').scrollIntoView({ behavior: 'smooth' });
+
+
+                    console.log()
+                    if (cropCondition != "" && cropName != "") {
+                        getAi();
+                    }
+
+
+
+
+                }
+
+
+                resStatus++;
+            };
+
+            const data2 = JSON.stringify({
+                images: [imgPublicUrl],
+                latitude: 49.207,
+                longitude: 16.608,
+                similar_images: true
+            });
+
+            xhr2.send(data2);
+
+
+
+
+
+
+            // const xml3 = new XMLHttpRequest();
+            // xml3.open("GET", `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${document.getElementById("longitude").innerText}&lat=${document.getElementById("latitude").innerText}`,);
+            // xml3.setRequestHeader("Content-Type", "application/json");
+
+
+            // function soilJsonToString(data) {
+            //     const properties = data.properties || {};
+            //     const layers = {};
+
+            //     for (const [propName, propData] of Object.entries(properties)) {
+            //         if (!propData?.depths) continue;
+
+            //         propData.depths.forEach(depth => {
+            //             const layer = depth.label || `${depth.range[0]}-${depth.range[1]}cm`;
+            //             if (!layers[layer]) layers[layer] = {};
+
+            //             let value = depth.values?.mean ?? null;
+            //             layers[layer][propName] = value;
+            //         });
+            //     }
+
+            //     // Build final string
+            //     let output = "";
+            //     for (const [layer, props] of Object.entries(layers)) {
+            //         output += `Layer: ${layer}\n`;
+            //         for (const [p, v] of Object.entries(props)) {
+            //             output += `  ${p}: ${v}\n`;
+            //         }
+            //         output += "\n";
+            //     }
+
+            //     return output;
+            // }
+
+
+            // xml3.onreadystatechange = function () {
+            //     if (xml3.readyState === 4) {
+            //         const soilData = JSON.parse(xml3.responseText);
+            //         console.log(soilJsonToString(soilData));
+
+
+            //         let htmlString = soilData["properties"]["layers"].map((item) => {
+            //             return `
+            //                     <div>${item["name"]}</div>
+            //             `;
+            //         }).join("") + `
+
+            //         `;
+
+
+
+            //         document.getElementById('final_soil_data').innerHTML = htmlString;
+            //         console.log(soilData);
+            //     }
+            //     // Hide loader and show message
+            //     document.getElementById('finalLoader').style.display = 'none';
+            //     document.getElementById('finalMessage').style.display = 'block';
+            // };
+
+            // const soilDataRequest = JSON.stringify({
+            //     lon: 77.5946,
+            //     lat: 12.9716
+            // });
+
+            // xml3.send(soilDataRequest);
+
+
+
+
+
+
+
+
+            function getAi() {
+
+
+                const xhr4 = new XMLHttpRequest();
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
+                xhr4.open("POST", url, true);
+                xhr4.setRequestHeader("Content-Type", "application/json");
+                xhr4.setRequestHeader("X-goog-api-key", "AIzaSyB6dmcHkKdXH5WmA6h4MyNX1iNxcjdSWWc");
+
+                xhr4.onreadystatechange = function () {
+                    if (xhr4.readyState === 4) {
+                        document.getElementById('ai_feedback').innerHTML = JSON.parse(xhr4.responseText)["candidates"][0]["content"]["parts"][0]["text"];
+
+                        if (xhr4.status === 200) {
+                            document.getElementById('response').textContent = xhr4.responseText;
+                        } else {
+                            document.getElementById('response').textContent = `Error: ${xhr4.status} - ${xhr4.statusText}`;
+                        }
+                    }
+
+                    document.getElementById('finalLoader').style.display = 'none';
+                    document.getElementById('finalMessage').style.display = 'block';
+                };
+
+                const data = {
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    // text: `i am a farmer and i have ${cropName} in a crop and i am having a ${cropCondition} problem want a description of the problem in a single para and practical solutions that i can do to tackle it`
+                                    text: `
+                                    You are an agricultural expert AI assistant. Your task is to generate a clear and practical crop health report for farmers.
+
+**Follow this structure exactly:**
+
+**Crop:** ${cropName}
+**Reported Problem:** ${cropCondition}
+
+**1. Diagnosis:**
+Provide a concise, one-paragraph description of the problem. Explain what it likely is, what causes it (e.g., fungus, pest, nutrient deficiency), and how it affects the plant in simple terms.
+
+**2. Immediate Action Plan:**
+- List 3-5 practical, step-by-step solutions the farmer can implement immediately.
+- Prioritize the most effective and accessible methods first.
+- Use bullet points. Each solution should be a simple, actionable instruction.
+
+**3. Preventive Measures:**
+- List 2-3 medium to long-term practices to prevent the problem from recurring in the next season.
+- Focus on soil health, crop rotation, and resistant varieties.
+
+**Language:** Use simple, clear, and direct language. Avoid unnecessary scientific jargon. The farmer is knowledgeable but needs clear, actionable steps.
+                                    `
+                                }
+                            ]
+                        }
+                    ]
+                };
+
+
+
+
+                xhr4.send(JSON.stringify(data));
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // Simulate processing delay
+            // setTimeout(() => {
+
+            // }, 3000);
+        });
+    </script>
+</body>
+
+</html>
