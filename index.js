@@ -5,6 +5,9 @@ const authToken = process.env.TWILIO_TOKEN;
 const client = require("twilio")(accountSid, authToken);
 const fs = require("fs");
 const path = require("path");
+const cors = require("cors");
+app.use(cors());
+
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
@@ -127,6 +130,7 @@ app.post("/setvoice", async (req, res) => {
             res.send(`{'status': 'failed',err: ${JSON.stringify(err)}}`)
 
         }
+        
         // inner second try catch
 
 

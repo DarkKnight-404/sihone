@@ -593,7 +593,7 @@
 
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "https://plant.id/api/v3/health_assessment", true);
-            xhr.setRequestHeader("Api-Key", "HouHTGANLbLGLrxQLsEtIGRcNmXCVd03tWmtw5xWRqTNWg0Eee");
+            xhr.setRequestHeader("Api-Key", "Iw5r9pDoKY4RTVYbuWn4LOzHuBJWGOKnMay12bEcAgo8YhRk07");
             xhr.setRequestHeader("Content-Type", "application/json");
 
             xhr.onreadystatechange = function () {
@@ -689,7 +689,7 @@
 
             const xhr2 = new XMLHttpRequest();
             xhr2.open("POST", "https://plant.id/api/v3/identification", true);
-            xhr2.setRequestHeader("Api-Key", "HouHTGANLbLGLrxQLsEtIGRcNmXCVd03tWmtw5xWRqTNWg0Eee");
+            xhr2.setRequestHeader("Api-Key", "Iw5r9pDoKY4RTVYbuWn4LOzHuBJWGOKnMay12bEcAgo8YhRk07");
             xhr2.setRequestHeader("Content-Type", "application/json");
 
             xhr2.onreadystatechange = function () {
@@ -868,11 +868,41 @@
                     if (xhr4.readyState === 4) {
                         document.getElementById('ai_feedback').innerHTML = JSON.parse(xhr4.responseText)["candidates"][0]["content"]["parts"][0]["text"];
 
-                        if (xhr4.status === 200) {
-                            document.getElementById('response').textContent = xhr4.responseText;
-                        } else {
-                            document.getElementById('response').textContent = `Error: ${xhr4.status} - ${xhr4.statusText}`;
+                        // if (xhr4.status === 200) {
+                        //     document.getElementById('response').textContent = xhr4.responseText;
+                        // } else {
+                        //     document.getElementById('response').textContent = `Error: ${xhr4.status} - ${xhr4.statusText}`;
+                        // }
+
+
+
+                        let feedback = JSON.parse(xhr4.responseText)["candidates"][0]["content"]["parts"][0]["text"];
+
+                        console.log(feedback);
+
+                        let xml = new XMLHttpRequest();
+                        xml.open("POST", "https://sihone.vercel.app/setvoice");
+                        xml.setRequestHeader("Content-Type", "application/json");
+                        xml.send(JSON.stringify({
+                            data: feedback,
+                            password: 314159
+                        }))
+
+                        xml.onload = ()=>{
+                            if(xml.response.status == "successfull"){
+                                console.log("going to call you buddy")
+                            }
+                            else{
+                                console.log(xml.response);
+                            }
                         }
+
+                        xml.onerror = ()=>{
+                            console.log(xml.error);
+                        }
+
+
+
                     }
 
                     document.getElementById('finalLoader').style.display = 'none';
