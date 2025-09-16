@@ -888,16 +888,33 @@
                             password: 314159
                         }))
 
-                        xml.onload = ()=>{
-                            if(xml.response.status == "successfull"){
-                                console.log("going to call you buddy")
+                        xml.onload = () => {
+                            // if(xml.response.status == "successfull"){
+                            console.log(xml.response)
+                            console.log("inside on load functino of gemini")
+                            console.log("going to call you buddy")
+
+
+                            let xmlCall = new XMLHttpRequest();
+                            xmlCall.open("get", "https://sihone.vercel.app/makecall");
+                            xmlCall.send();
+                            xmlCall.onload = () => {
+                                console.log("all done")
                             }
-                            else{
-                                console.log(xml.response);
+
+                            xmlCall.onerror = () => {
+                                console.log("error in sending call")
+                                console.log(xmlCall.error);
                             }
+
+
+                            // }
+                            // else{
+                            //     console.log(xml.response);
+                            // }
                         }
 
-                        xml.onerror = ()=>{
+                        xml.onerror = () => {
                             console.log(xml.error);
                         }
 
