@@ -8,6 +8,17 @@ const path = require("path");
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+const VoiceResponse = require('twilio').twiml.VoiceResponse;
+app.post('/voice', (request, response) => {
+  // Use the Twilio Node.js SDK to build an XML response
+    const twiml = new VoiceResponse();
+
+    twiml.say('Hello from your pals at Twilio! Have fun.');
+
+  // Render the response as XML in reply to the webhook request
+  response.type('text/xml');
+  response.send(twiml.toString());
+});
 
 
 
