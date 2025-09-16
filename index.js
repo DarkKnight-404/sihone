@@ -11,14 +11,14 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-app.get("/makecall",(req, res) => {
+app.get("/makecall", (req, res) => {
     client.calls.create({
         url: process.env.GET_XML_URL,
         to: "+918459781390",
         from: "+18156230647",
     }).then(call => {
         res.send("{'status':'success'}")
-    }).catch(()=>{res.send("{'status':'fail'}")});
+    }).catch(() => { res.send("{'status':'fail'}") });
 })
 
 
@@ -49,7 +49,7 @@ app.post("/setvoice", async (req, res) => {
 
 
 app.get("/getvoice", (req, res) => {
-    res.sendFile(path.join(__dirname, "voice.xml"));
+    res.sendFile(path.join(__dirname, "tmp", "voice.xml"));
 });
 
 
@@ -58,7 +58,7 @@ app.get("/getvoice", (req, res) => {
 app.post("/login", (req, res) => {
     console.log(req.body)
     if (req.body.password == "314159") {
-        res.sendFile(path.join(__dirname, "Main.html"));
+        res.sendFile(path.join(__dirname, "tmp", "Main.html"));
     }
     else {
         res.send("<h1>Please Enter Valid Password</h1>")
