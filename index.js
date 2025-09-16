@@ -11,6 +11,41 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get("/makecall", (req, res) => {
     client.calls.create({
         url: process.env.GET_XML_URL,
@@ -36,20 +71,116 @@ app.post("/setvoice", async (req, res) => {
   <Say voice="alice">${req.body.data}</Say>
 </Response>`;
 
-    fs.promises.writeFile("voice.xml", xmlContent, "utf8").then(val => {
-        console.log(val)
-        res.send("{status: 'success'}")
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await clientM.connect();
+        // Send a ping to confirm a successful connection
+        // Select database and collection
+        const db = clientM.db("farmcult");
+        const collection = db.collection("aireview");
 
-    }).catch(err => {
-        res.send(`{status: "fail", err: ${JSON.stringify(err)}}`)
-    })
+        // Fetch all components
+        const result = await collection.insertOne({ text: xmlContent });
+
+        console.log("Data inserted with id:", result.insertedId);
+
+        res.send('{"status": "successfull"}')
+    }
+    catch (err) {
+
+
+        // inner second try catch
+        try {
+            // Connect the client to the server	(optional starting in v4.7)
+            await clientM.connect();
+            // Send a ping to confirm a successful connection
+            // Select database and collection
+            const db = clientM.db("farmcult");
+            const collection = db.collection("aireview");
+
+            // Fetch all components
+            const result = await collection.insertOne({ text: xmlContent });
+
+            console.log("Data inserted with id:", result.insertedId);
+
+            res.send('{"status": "successfull"}')
+        }
+        catch (err) {
+            res.send(`{'status': 'failed',err: ${JSON.stringify(err)}}`)
+
+        }
+        // inner second try catch
+
+
+
+
+
+
+    }
+    finally {
+        // Ensures that the client will close when you finish/error
+        await clientM.close();
+    }
 
 
 })
 
 
-app.get("/getvoice", (req, res) => {
-    res.sendFile(path.join(__dirname, "tmp", "voice.xml"));
+app.get("/getvoice", async (req, res) => {
+    // res.sendFile(path.join(__dirname, "tmp", "voice.xml"));
+
+
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await clientM.connect();
+        // Send a ping to confirm a successful connection
+        // Select database and collection
+        const db = clientM.db("farmcult");
+        const collection = db.collection("aireview");
+
+        // Fetch all components
+        const components = await collection.find({}).toArray();
+
+        console.log(components);
+
+        res.type("text/xml");   // set content-type header
+        res.send(components[0].text);
+
+    }
+    catch (err) {
+
+
+        // inner 2nd try catch
+        try {
+            // Connect the client to the server	(optional starting in v4.7)
+            await clientM.connect();
+            // Send a ping to confirm a successful connection
+            // Select database and collection
+            const db = clientM.db("farmcult");
+            const collection = db.collection("aireview");
+
+            // Fetch all components
+            const components = await collection.find({}).toArray();
+
+            console.log(components);
+
+            res.type("text/xml");   // set content-type header
+            res.send(components[0].text);
+
+        }
+        catch (err) {
+            res.send(`{"status": "fail", err: '${JSON.stringify(err)}'}`)
+        }
+        // inner 2nd try catch
+
+
+    }
+    finally {
+        // Ensures that the client will close when you finish/error
+        await clientM.close();
+    }
+
+
 });
 
 
