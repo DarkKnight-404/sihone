@@ -10,14 +10,14 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
 app.post('/voice', (request, response) => {
-  // Use the Twilio Node.js SDK to build an XML response
+    // Use the Twilio Node.js SDK to build an XML response
     const twiml = new VoiceResponse();
 
     twiml.say('Hello from your pals at Twilio! Have fun.');
 
-  // Render the response as XML in reply to the webhook request
-  response.type('text/xml');
-  response.send(twiml.toString());
+    // Render the response as XML in reply to the webhook request
+    response.type('text/xml');
+    response.send(twiml.toString());
 });
 
 
@@ -87,10 +87,7 @@ app.post("/setvoice", async (req, res) => {
     console.log(typeof req.body)
 
 
-    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">${req.body.data}</Say>
-</Response>`;
+    const xmlContent = `${req.body.data}`;
 
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -147,7 +144,7 @@ app.post("/setvoice", async (req, res) => {
 })
 
 
-app.get("/getvoice", async (req, res) => {
+app.post("/getvoice", async (req, res) => {
     // res.sendFile(path.join(__dirname, "tmp", "voice.xml"));
 
 
@@ -164,8 +161,15 @@ app.get("/getvoice", async (req, res) => {
 
         console.log(components);
 
-        res.type("text/xml");   // set content-type header
-        res.send(components[0].text);
+
+
+        const twiml = new VoiceResponse();
+
+        twiml.say(components[0].text);
+
+        // Render the response as XML in reply to the webhook request
+        res.type('text/xml');
+        res.send(twiml.toString());
 
     }
     catch (err) {
@@ -185,16 +189,22 @@ app.get("/getvoice", async (req, res) => {
 
             console.log(components);
 
-            res.type("text/xml");   // set content-type header
-            res.send(components[0].text);
 
+
+            const twiml = new VoiceResponse();
+
+            twiml.say(components[0].text);
+
+            // Render the response as XML in reply to the webhook request
+            res.type('text/xml');
+            res.send(twiml.toString());
         }
         catch (err) {
             res.send(`{"status": "fail", err: '${JSON.stringify(err)}'}`)
         }
         // inner 2nd try catch
 
-        
+
     }
     finally {
         // Ensures that the client will close when you finish/error
