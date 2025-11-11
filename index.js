@@ -169,7 +169,7 @@ app.post("/getvoice", async (req, res) => {
 
         const twiml = new VoiceResponse();
 
-        twiml.say(components[0].text);
+        twiml.say(components[components.length-1].text);
 
         // Render the response as XML in reply to the webhook request
         res.type('text/xml');
